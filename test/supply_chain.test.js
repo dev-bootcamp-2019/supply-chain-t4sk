@@ -11,20 +11,33 @@ contract('SupplyChain', function(accounts) {
     const price = web3.toWei(1, "ether")
 
     it("should add an item with the provided name and price", async() => {
+        console.log("HERE-----")
         const supplyChain = await SupplyChain.deployed()
 
         var eventEmitted = false
 
-        var event = supplyChain.ForSale()
-        await event.watch((err, res) => {
-            sku = res.args.sku.toString(10)
-            eventEmitted = true
-        })
+
 
         const name = "book"
 
         await supplyChain.addItem(name, price, {from: alice})
 
+        var event = supplyChain.ForSale()
+        await new Promise((resolve, reject) => {
+          event.watch((err, res) => {
+              if (err) {
+                reject(err)
+              }
+
+              console.log("HERE", sku, res)
+              sku = res.args.sku.toString(10)
+              eventEmitted = true
+
+              resolve()
+          })
+        })
+
+        console.log("FETCH", sku)
         const result = await supplyChain.fetchItem.call(sku)
 
         assert.equal(result[0], name, 'the name of the last added item does not match the expected value')
